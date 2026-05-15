@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id           Int       @id(map: "id") @default(autoincrement())
+  user         String?   @db.VarChar(20)
+  email        String?   @db.VarChar(100)
+  password     String?
+  refid        String    @default("") @db.VarChar(100)
+  usdt         Float     @default(0)
+  balance_make String?   @default("0")
+  name         String?   @db.VarChar(100)
+  country      String?   @db.VarChar(50)
+  phone        String?   @db.VarChar(20)
+  bot          Int       @default(0)
+  botEx        DateTime? @db.Date
+  botEx2       DateTime? @db.Date
+  mtotal       Int       @default(0)
+  mutotal      Int       @default(0)
+  active       Int       @default(1) @db.SmallInt
+  level        Int       @default(0)
+  date         DateTime? @db.Timestamp(6)
+  img          Int       @default(0) @db.SmallInt
+  cron         Int       @default(0) @db.SmallInt
+  afm          Int       @default(0) @db.SmallInt
+  clerk_id     String?   @unique
+
+  @@map("users")
+}
+
+model Setting {
+  id            Int   @id @default(autoincrement())
+  is_login      Int   @default(1) @db.SmallInt
+  is_tree       Int   @default(1) @db.SmallInt
+  is_joining    Int   @default(1)
+  is_transfer   Int   @default(1)
+  is_withdrawal Int   @default(1)
+  is_diposit    Int   @default(1)
+  is_activation Int   @default(1)
+  sponsor       Float @default(0)
+  ssponsor      Float @default(0)
+  matching      Float @default(0)
+
+  @@map("settings")
+}
+
+model admin {
+  id          Int    @id @default(autoincrement())
+  user        String @db.VarChar(256)
+  password    String
+  email       String @db.VarChar(100)
+  active      Int    @default(1)
+  admin       Int    @default(0) @db.SmallInt
+  permissions String
+}
+
+model block_chain {
+  id      Int     @id @default(autoincrement())
+  name    String? @db.VarChar(50)
+  network String? @db.VarChar(50)
+}
+
+model block_token {
+  id                Int       @id @default(autoincrement())
+  symbol            String?   @db.VarChar(20)
+  code              String
+  status            Int       @default(0) @db.SmallInt
+  cron              Int       @default(0) @db.SmallInt
+  cronD             Int       @default(0) @db.SmallInt
+  hot               Int       @default(0) @db.SmallInt
+  name              String?   @db.VarChar(50)
+  pic               String?   @default("coin.png") @db.VarChar(50)
+  slug              String?   @db.VarChar(50)
+  chain             String    @default("0") @db.VarChar(20)
+  price             Float     @default(0)
+  pdis              Int       @default(10) @db.SmallInt
+  rank              Int
+  symboli           String    @db.VarChar(10)
+  marketcap         Float     @default(0) @db.Real
+  volume            Float     @default(0) @db.Real
+  liquidity         BigInt
+  age               Int
+  color             String    @db.VarChar(12)
+  pic64             String
+  exchanges         String    @db.VarChar(5)
+  markets           String    @db.VarChar(5)
+  pairs             String    @db.VarChar(5)
+  categories        String
+  allTimeHigh       Float     @db.Real
+  circulatingSupply Float     @db.Real
+  totalSupply       BigInt
+  maxSupply         BigInt
+  changePercentage  Float     @default(0) @db.Real
+  changeP           Float     @default(0) @db.Real
+  volumeP           BigInt    @default(0)
+  pDate             DateTime? @default(dbgenerated("'1900-01-01'::date")) @db.Date
+}
+
+model block_token_cat {
+  id     Int     @id @default(autoincrement())
+  name   String? @db.VarChar(50)
+  title  String  @db.VarChar(50)
+  slug   String? @db.VarChar(50)
+  status Int     @default(1) @db.SmallInt
+}
+
+model block_token_details {
+  id          Int     @id @default(autoincrement())
+  symbol      String? @db.VarChar(20)
+  dayLow      Float
+  dayHigh     Float
+  yearHigh    Float
+  yearLow     Float
+  priceAvg50  Float
+  priceAvg200 Float
+  open        Float
+}
+
+model block_token_link {
+  id         Int     @id @default(autoincrement())
+  symbol     String? @db.VarChar(20)
+  website    String
+  whitepaper String
+  twitter    String
+  reddit     String
+  telegram   String
+  discord    String
+  medium     String
+  instagram  String
+  tiktok     String
+  youtube    String
+  linkedin   String
+  twitch     String
+  spotify    String
+  naver      String
+  wechat     String
+  soundcloud String
+}
+
+model botp {
+  id    Int       @id @default(autoincrement())
+  user  String    @db.VarChar(20)
+  level Int       @default(0)
+  date  DateTime? @db.Date
+  cron  Int       @default(0) @db.SmallInt
+}
+
+model btcDo {
+  id    Int       @id @default(autoincrement())
+  dom   String    @db.VarChar(100)
+  ddate DateTime? @db.Timestamp(6)
+}
+
+model countries {
+  id             Int     @id @default(autoincrement())
+  iso            String  @db.Char(5)
+  name           String  @db.VarChar(80)
+  printable_name String  @db.VarChar(80)
+  currency       Float   @default(0)
+  currencyC      String? @db.VarChar(100)
+  iso3           String? @db.Char(5)
+  numcode        Int?    @db.SmallInt
+  code           String  @db.VarChar(255)
+  flag           String  @db.VarChar(50)
+}
+
+model login_history {
+  id          Int       @id @default(autoincrement())
+  user        String    @db.VarChar(100)
+  logintime   DateTime? @db.Timestamp(6)
+  ip          String?   @db.VarChar(100)
+  city        String?   @db.VarChar(100)
+  region      String?   @db.VarChar(100)
+  countryCode String?   @db.VarChar(100)
+  countryName String?   @db.VarChar(100)
+  latitude    String?   @db.VarChar(100)
+  longitude   String?   @db.VarChar(100)
+  type        String    @db.VarChar(100)
+}
+
+model notices {
+  id      Int      @id @default(autoincrement())
+  content String
+  type    Int      @default(0)
+  status  Int      @default(0)
+  created DateTime @default(now()) @db.Timestamp(6)
+}
+
+model sessions {
+  id             Int    @id @default(autoincrement())
+  user_id        Int    @default(0)
+  session_number Int    @default(0)
+  session_id     String @db.VarChar(100)
+  ip_address     String @db.VarChar(100)
+}
+
+model suser {
+  id   Int    @id @default(autoincrement())
+  user String @db.VarChar(100)
+}
+
+model transactions {
+  id          Int       @id @default(autoincrement())
+  user        String?   @db.VarChar(100)
+  description String
+  address     String?
+  amount      Float
+  balance     Float
+  wbalance    Float     @default(0)
+  receive     Int       @default(1)
+  status      Int       @default(1)
+  created     DateTime? @db.Timestamp(6)
+  type        String    @db.VarChar(100)
+  btype       Int       @default(0) @db.SmallInt
+  hash        String?
+  team        Int       @default(0)
+  rescron     Int       @default(0)
+}
+
+model user_address {
+  id          Int     @id @default(autoincrement())
+  uid         Int     @default(0)
+  address     String?
+  block_chain Int     @default(0)
+  block_token Int     @default(0)
+}
+
+model user_deposit {
+  id        Int      @id @default(autoincrement())
+  user      String   @db.VarChar(100)
+  hash      String
+  sender    String
+  receiver  String
+  amount    Float
+  timestamp String   @db.VarChar(100)
+  date      DateTime @default(now()) @db.Timestamp(6)
+  team      Int      @default(0)
+}
+
+model users_balance {
+  id   Int   @id @default(autoincrement())
+  user Int
+  pol  Float @default(0)
+  eth  Float @default(0)
+  bnb  Float @default(0)
+}
+
+model users_level {
+  id   Int    @id @default(autoincrement())
+  user String @db.VarChar(20)
+  mt1  Int    @default(0)
+  mt2  Int    @default(0)
+  mt3  Int    @default(0)
+  mt4  Int    @default(0)
+  mt5  Int    @default(0)
+  mt6  Int    @default(0)
+  mt7  Int    @default(0)
+  mt8  Int    @default(0)
+  mt9  Int    @default(0)
+  mt10 Int    @default(0)
+  mt11 Int    @default(0)
+  mt12 Int    @default(0)
+  mt13 Int    @default(0)
+  mt14 Int    @default(0)
+  mt15 Int    @default(0)
+  mt16 Int    @default(0)
+  mt17 Int    @default(0)
+  mt18 Int    @default(0)
+  mt19 Int    @default(0)
+  mt20 Int    @default(0)
+}
