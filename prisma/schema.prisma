@@ -9,270 +9,788 @@ datasource db {
 }
 
 model User {
-  id           Int       @id(map: "id") @default(autoincrement())
-  user         String?   @db.VarChar(20)
-  email        String?   @db.VarChar(100)
-  password     String?
-  refid        String    @default("") @db.VarChar(100)
-  usdt         Float     @default(0)
-  balance_make String?   @default("0")
-  name         String?   @db.VarChar(100)
-  country      String?   @db.VarChar(50)
-  phone        String?   @db.VarChar(20)
-  bot          Int       @default(0)
-  botEx        DateTime? @db.Date
-  botEx2       DateTime? @db.Date
-  mtotal       Int       @default(0)
-  mutotal      Int       @default(0)
-  active       Int       @default(1) @db.SmallInt
-  level        Int       @default(0)
-  date         DateTime? @db.Timestamp(6)
-  img          Int       @default(0) @db.SmallInt
-  cron         Int       @default(0) @db.SmallInt
-  afm          Int       @default(0) @db.SmallInt
-  clerk_id     String?   @unique
+  id               String            @id @default(cuid())
+  clerkId          String            @unique
+  email            String            @unique
+  name             String?
+  avatarUrl        String?
+  role             Role              @default(BUYER)
+  onboardingStatus OnboardingStatus  @default(PENDING)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime @updatedAt
+  carts            Cart[]
+  facebookAccounts FacebookAccount?
+  favoriteProducts FavoriteProduct[]
+  favoriteShops    FavoriteShop[]
+  notifications    Notification[]
+  orders           Order[]
+  productReviews   ProductReview[]
+  profile          Profile?
+  recentlyViewed   RecentlyViewed[]
+  reports          Report[]
+  reviewReports    ReviewReport[]
+  reviewVotes      ReviewVote[]
+  shopReviews      ShopReview[]
+  shop             Shop?
 
   @@map("users")
 }
 
 model Setting {
-  id            Int   @id @default(autoincrement())
-  is_login      Int   @default(1) @db.SmallInt
-  is_tree       Int   @default(1) @db.SmallInt
-  is_joining    Int   @default(1)
-  is_transfer   Int   @default(1)
-  is_withdrawal Int   @default(1)
-  is_diposit    Int   @default(1)
-  is_activation Int   @default(1)
-  sponsor       Float @default(0)
-  ssponsor      Float @default(0)
-  matching      Float @default(0)
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String?
+  type      String   @default("string")
+  group     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("settings")
 }
 
-model admin {
-  id          Int    @id @default(autoincrement())
-  user        String @db.VarChar(256)
-  password    String
-  email       String @db.VarChar(100)
-  active      Int    @default(1)
-  admin       Int    @default(0) @db.SmallInt
-  permissions String
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@map("audit_logs")
 }
 
-model block_chain {
-  id      Int     @id @default(autoincrement())
-  name    String? @db.VarChar(50)
-  network String? @db.VarChar(50)
+model CartItem {
+  id          String   @id @default(cuid())
+  cartId      String
+  productId   String
+  quantity    Int      @default(1)
+  variantInfo Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  cart        Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@map("cart_items")
 }
 
-model block_token {
-  id                Int       @id @default(autoincrement())
-  symbol            String?   @db.VarChar(20)
-  code              String
-  status            Int       @default(0) @db.SmallInt
-  cron              Int       @default(0) @db.SmallInt
-  cronD             Int       @default(0) @db.SmallInt
-  hot               Int       @default(0) @db.SmallInt
-  name              String?   @db.VarChar(50)
-  pic               String?   @default("coin.png") @db.VarChar(50)
-  slug              String?   @db.VarChar(50)
-  chain             String    @default("0") @db.VarChar(20)
-  price             Float     @default(0)
-  pdis              Int       @default(10) @db.SmallInt
-  rank              Int
-  symboli           String    @db.VarChar(10)
-  marketcap         Float     @default(0) @db.Real
-  volume            Float     @default(0) @db.Real
-  liquidity         BigInt
-  age               Int
-  color             String    @db.VarChar(12)
-  pic64             String
-  exchanges         String    @db.VarChar(5)
-  markets           String    @db.VarChar(5)
-  pairs             String    @db.VarChar(5)
-  categories        String
-  allTimeHigh       Float     @db.Real
-  circulatingSupply Float     @db.Real
-  totalSupply       BigInt
-  maxSupply         BigInt
-  changePercentage  Float     @default(0) @db.Real
-  changeP           Float     @default(0) @db.Real
-  volumeP           BigInt    @default(0)
-  pDate             DateTime? @default(dbgenerated("'1900-01-01'::date")) @db.Date
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String?
+  shopId    String?
+  sessionId String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime @updatedAt
+  items     CartItem[]
+  shop      Shop?      @relation(fields: [shopId], references: [id])
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("carts")
 }
 
-model block_token_cat {
-  id     Int     @id @default(autoincrement())
-  name   String? @db.VarChar(50)
-  title  String  @db.VarChar(50)
-  slug   String? @db.VarChar(50)
-  status Int     @default(1) @db.SmallInt
+model FacebookAccount {
+  id                      String                   @id @default(cuid())
+  userId                  String                   @unique
+  facebookUserId          String                   @unique
+  facebookName            String?
+  facebookEmail           String?
+  facebookAvatarUrl       String?
+  accessToken             String?
+  tokenExpiresAt          DateTime?
+  tokenStatus             TokenStatus              @default(UNKNOWN)
+  scopes                  String[]
+  connectedAt             DateTime                 @default(now())
+  lastRefreshedAt         DateTime?
+  users                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageConnections         FacebookPageConnection[]
+  pages                   FacebookPage[]
+
+  @@map("facebook_accounts")
 }
 
-model block_token_details {
-  id          Int     @id @default(autoincrement())
-  symbol      String? @db.VarChar(20)
-  dayLow      Float
-  dayHigh     Float
-  yearHigh    Float
-  yearLow     Float
-  priceAvg50  Float
-  priceAvg200 Float
-  open        Float
+model FacebookPageConnection {
+  id                String           @id @default(cuid())
+  shopId            String           @unique
+  facebookAccountId String?
+  facebookPageId    String           @unique
+  connectedVia      String
+  connectedAt       DateTime         @default(now())
+  isActive          Boolean          @default(true)
+  syncEnabled       Boolean          @default(true)
+  facebookAccount   FacebookAccount? @relation(fields: [facebookAccountId], references: [id])
+  facebookPage      FacebookPage     @relation(fields: [facebookPageId], references: [id])
+  shop              Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("facebook_page_connections")
 }
 
-model block_token_link {
-  id         Int     @id @default(autoincrement())
-  symbol     String? @db.VarChar(20)
-  website    String
-  whitepaper String
-  twitter    String
-  reddit     String
-  telegram   String
-  discord    String
-  medium     String
-  instagram  String
-  tiktok     String
-  youtube    String
-  linkedin   String
-  twitch     String
-  spotify    String
-  naver      String
-  wechat     String
-  soundcloud String
+model FacebookPagePost {
+  id             String       @id @default(cuid())
+  facebookPageId String
+  postId         String       @unique
+  message        String?
+  story          String?
+  fullPicture    String?
+  permalinkUrl   String?
+  likesCount     Int?
+  commentsCount  Int?
+  sharesCount    Int?
+  createdTime    DateTime?
+  syncedAt       DateTime     @default(now())
+  facebookPage   FacebookPage @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
+
+  @@map("facebook_page_posts")
 }
 
-model botp {
-  id    Int       @id @default(autoincrement())
-  user  String    @db.VarChar(20)
-  level Int       @default(0)
-  date  DateTime? @db.Date
-  cron  Int       @default(0) @db.SmallInt
+model FacebookPage {
+  id                      String                  @id @default(cuid())
+  facebookAccountId       String
+  pageId                  String                  @unique
+  pageName                String
+  pageUsername            String?
+  pageUrl                 String?
+  category                String?
+  about                   String?
+  description             String?
+  profilePictureUrl       String?
+  coverImageUrl           String?
+  pageAccessToken         String?
+  tokenExpiresAt          DateTime?
+  tokenStatus             TokenStatus             @default(UNKNOWN)
+  likesCount              BigInt?
+  followersCount          BigInt?
+  commentsCount           BigInt?
+  ratingValue             Float?
+  ratingCount             Int?
+  messengerLink           String?
+  verificationStatus      String?
+  lastSyncedAt            DateTime?
+  syncStatus              SyncStatus              @default(PENDING)
+  syncError               String?
+  syncSource              String?
+  isManagedByUser         Boolean                 @default(true)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime @updatedAt
+  facebookConnection      FacebookPageConnection?
+  posts                   FacebookPagePost[]
+  facebookAccount         FacebookAccount         @relation(fields: [facebookAccountId], references: [id], onDelete: Cascade)
+  syncLogs                FacebookSyncLog[]
+
+  @@map("facebook_pages")
 }
 
-model btcDo {
-  id    Int       @id @default(autoincrement())
-  dom   String    @db.VarChar(100)
-  ddate DateTime? @db.Timestamp(6)
+model FacebookSyncLog {
+  id             String       @id @default(cuid())
+  facebookPageId String
+  syncStatus     SyncStatus
+  syncSource     String?
+  metricsUpdated String[]
+  errorMessage   String?
+  duration       Int?
+  createdAt      DateTime     @default(now())
+  facebookPage   FacebookPage @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
+
+  @@map("facebook_sync_logs")
 }
 
-model countries {
-  id             Int     @id @default(autoincrement())
-  iso            String  @db.Char(5)
-  name           String  @db.VarChar(80)
-  printable_name String  @db.VarChar(80)
-  currency       Float   @default(0)
-  currencyC      String? @db.VarChar(100)
-  iso3           String? @db.Char(5)
-  numcode        Int?    @db.SmallInt
-  code           String  @db.VarChar(255)
-  flag           String  @db.VarChar(50)
+model FavoriteProduct {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  products  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@map("favorite_products")
 }
 
-model login_history {
-  id          Int       @id @default(autoincrement())
-  user        String    @db.VarChar(100)
-  logintime   DateTime? @db.Timestamp(6)
-  ip          String?   @db.VarChar(100)
-  city        String?   @db.VarChar(100)
-  region      String?   @db.VarChar(100)
-  countryCode String?   @db.VarChar(100)
-  countryName String?   @db.VarChar(100)
-  latitude    String?   @db.VarChar(100)
-  longitude   String?   @db.VarChar(100)
-  type        String    @db.VarChar(100)
+model FavoriteShop {
+  id        String   @id @default(cuid())
+  userId    String
+  shopId    String
+  createdAt DateTime @default(now())
+  shops     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shopId])
+  @@map("favorite_shops")
 }
 
-model notices {
-  id      Int      @id @default(autoincrement())
-  content String
-  type    Int      @default(0)
-  status  Int      @default(0)
-  created DateTime @default(now()) @db.Timestamp(6)
+model FeaturedProduct {
+  id        String    @id @default(cuid())
+  productId String
+  position  Int       @default(0)
+  startDate DateTime?
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  products  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("featured_products")
 }
 
-model sessions {
-  id             Int    @id @default(autoincrement())
-  user_id        Int    @default(0)
-  session_number Int    @default(0)
-  session_id     String @db.VarChar(100)
-  ip_address     String @db.VarChar(100)
+model FeaturedShop {
+  id        String    @id @default(cuid())
+  shopId    String
+  position  Int       @default(0)
+  startDate DateTime?
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  shops     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("featured_shops")
 }
 
-model suser {
-  id   Int    @id @default(autoincrement())
-  user String @db.VarChar(100)
+model HomepageSection {
+  id        String   @id @default(cuid())
+  type      String
+  title     String?
+  settings  Json?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("homepage_sections")
 }
 
-model transactions {
-  id          Int       @id @default(autoincrement())
-  user        String?   @db.VarChar(100)
-  description String
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  productId    String
+  quantity     Int
+  unitPrice    Decimal @db.Decimal(10, 2)
+  totalPrice   Decimal @db.Decimal(10, 2)
+  variantInfo  Json?
+  productTitle String
+  productImage String?
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model OrderStatusLog {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_logs")
+}
+
+model Order {
+  id                String           @id @default(cuid())
+  orderNumber       String           @unique
+  buyerId           String
+  shopId            String
+  status            OrderStatus      @default(PENDING)
+  paymentMethod     PaymentMethod    @default(CASH_ON_DELIVERY)
+  paymentStatus     PaymentStatus    @default(UNPAID)
+  subtotal          Decimal          @db.Decimal(10, 2)
+  discountAmount    Decimal?         @db.Decimal(10, 2)
+  total             Decimal          @db.Decimal(10, 2)
+  notes             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime @updatedAt
+  items             OrderItem[]
+  statusLogs        OrderStatusLog[]
+  buyer             User             @relation(fields: [buyerId], references: [id])
+  shop              Shop             @relation(fields: [shopId], references: [id])
+  shippingAddress   ShippingAddress?
+
+  @@map("orders")
+}
+
+model ProductCategory {
+  id                     String            @id @default(cuid())
+  name                   String
+  slug                   String            @unique
+  description            String?
+  imageUrl               String?
+  parentId               String?
+  sortOrder              Int               @default(0)
+  isActive               Boolean           @default(true)
+  createdAt              DateTime          @default(now())
+  productCategories      ProductCategory?  @relation("product_categoriesToproduct_categories", fields: [parentId], references: [id])
+  otherProductCategories ProductCategory[] @relation("product_categoriesToproduct_categories")
+  products               Product[]
+
+  @@map("product_categories")
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model ProductReview {
+  id                  String             @id @default(cuid())
+  productId           String
+  userId              String
+  orderId             String?
+  rating              Int
+  title               String?
+  body                String?
+  imageUrls           String[]
+  isVerifiedPurchase  Boolean            @default(false)
+  status              ReviewStatus       @default(PENDING)
+  helpfulCount        Int                @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime @updatedAt
+  product             Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewReports       ReviewReport[]
+  reviewVotes         ReviewVote[]
+  reply               SellerReviewReply?
+
+  @@unique([productId, userId])
+  @@map("product_reviews")
+}
+
+model ProductVariantOption {
+  id              String         @id @default(cuid())
+  variantId       String
+  value           String
+  priceAdj        Decimal?       @db.Decimal(10, 2)
+  stock           Int?
+  variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@map("product_variant_options")
+}
+
+model ProductVariant {
+  id                    String                 @id @default(cuid())
+  productId             String
+  name                  String
+  options               ProductVariantOption[]
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_variants")
+}
+
+model Product {
+  id                      String            @id @default(cuid())
+  shopId                  String
+  categoryId              String?
+  title                   String
+  slug                    String
+  sku                     String?
+  shortDescription        String?
+  longDescription         String?
+  price                   Decimal           @db.Decimal(10, 2)
+  salePrice               Decimal?          @db.Decimal(10, 2)
+  stockQuantity           Int               @default(0)
+  inStock                 Boolean           @default(true)
+  mainImageUrl            String?
+  galleryImages           String[]
+  status                  ProductStatus     @default(DRAFT)
+  isFeatured              Boolean           @default(false)
+  orderableInternally     Boolean           @default(true)
+  externalInquiryOnly     Boolean           @default(false)
+  whatsappInquiryTemplate String?
+  tags                    String[]
+  metaTitle               String?
+  metaDescription         String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime @updatedAt
+  cartItems               CartItem[]
+  favoriteProducts        FavoriteProduct[]
+  featuredProducts        FeaturedProduct[]
+  orderItems              OrderItem[]
+  images                  ProductImage[]
+  reviews                 ProductReview[]
+  variants                ProductVariant[]
+  category                ProductCategory?  @relation(fields: [categoryId], references: [id])
+  shop                    Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, slug])
+  @@map("products")
+}
+
+model Profile {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  phone       String?
+  bio         String?
+  city        String?
   address     String?
-  amount      Float
-  balance     Float
-  wbalance    Float     @default(0)
-  receive     Int       @default(1)
-  status      Int       @default(1)
-  created     DateTime? @db.Timestamp(6)
-  type        String    @db.VarChar(100)
-  btype       Int       @default(0) @db.SmallInt
-  hash        String?
-  team        Int       @default(0)
-  rescron     Int       @default(0)
+  dateOfBirth DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
 }
 
-model user_address {
-  id          Int     @id @default(autoincrement())
-  uid         Int     @default(0)
-  address     String?
-  block_chain Int     @default(0)
-  block_token Int     @default(0)
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  shopId      String?
+  reason      String
+  description String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+  users       User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  shops       Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
 }
 
-model user_deposit {
-  id        Int      @id @default(autoincrement())
-  user      String   @db.VarChar(100)
-  hash      String
-  sender    String
-  receiver  String
-  amount    Float
-  timestamp String   @db.VarChar(100)
-  date      DateTime @default(now()) @db.Timestamp(6)
-  team      Int      @default(0)
+model ReviewReport {
+  id              String         @id @default(cuid())
+  userId          String
+  shopReviewId    String?
+  productReviewId String?
+  reason          String
+  createdAt       DateTime       @default(now())
+  productReviews  ProductReview? @relation(fields: [productReviewId], references: [id], onDelete: Cascade)
+  shopReviews     ShopReview?    @relation(fields: [shopReviewId], references: [id], onDelete: Cascade)
+  users           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("review_reports")
 }
 
-model users_balance {
-  id   Int   @id @default(autoincrement())
-  user Int
-  pol  Float @default(0)
-  eth  Float @default(0)
-  bnb  Float @default(0)
+model ReviewVote {
+  id              String         @id @default(cuid())
+  userId          String
+  shopReviewId    String?
+  productReviewId String?
+  isHelpful       Boolean
+  productReviews  ProductReview? @relation(fields: [productReviewId], references: [id], onDelete: Cascade)
+  shopReviews     ShopReview?    @relation(fields: [shopReviewId], references: [id], onDelete: Cascade)
+  users           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("review_votes")
 }
 
-model users_level {
-  id   Int    @id @default(autoincrement())
-  user String @db.VarChar(20)
-  mt1  Int    @default(0)
-  mt2  Int    @default(0)
-  mt3  Int    @default(0)
-  mt4  Int    @default(0)
-  mt5  Int    @default(0)
-  mt6  Int    @default(0)
-  mt7  Int    @default(0)
-  mt8  Int    @default(0)
-  mt9  Int    @default(0)
-  mt10 Int    @default(0)
-  mt11 Int    @default(0)
-  mt12 Int    @default(0)
-  mt13 Int    @default(0)
-  mt14 Int    @default(0)
-  mt15 Int    @default(0)
-  mt16 Int    @default(0)
-  mt17 Int    @default(0)
-  mt18 Int    @default(0)
-  mt19 Int    @default(0)
-  mt20 Int    @default(0)
+model SellerReviewReply {
+  id              String         @id @default(cuid())
+  shopReviewId    String?        @unique
+  productReviewId String?        @unique
+  body            String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime @updatedAt
+  productReviews  ProductReview? @relation(fields: [productReviewId], references: [id], onDelete: Cascade)
+  shopReviews     ShopReview?    @relation(fields: [shopReviewId], references: [id], onDelete: Cascade)
+
+  @@map("seller_review_replies")
+}
+
+model ShippingAddress {
+  id           String  @id @default(cuid())
+  orderId      String  @unique
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  district     String?
+  postalCode   String?
+  country      String  @default("Bangladesh")
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("shipping_addresses")
+}
+
+model ShopBusinessHour {
+  id        String  @id @default(cuid())
+  shopId    String
+  dayOfWeek Int
+  openTime  String?
+  closeTime String?
+  isClosed  Boolean @default(false)
+  shop      Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, dayOfWeek])
+  @@map("shop_business_hours")
+}
+
+model ShopCategory {
+  id                  String         @id @default(cuid())
+  name                String         @unique
+  slug                String         @unique
+  description         String?
+  icon                String?
+  imageUrl            String?
+  parentId            String?
+  sortOrder           Int            @default(0)
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  shopCategories      ShopCategory?  @relation("shop_categoriesToshop_categories", fields: [parentId], references: [id])
+  otherShopCategories ShopCategory[] @relation("shop_categoriesToshop_categories")
+  shops               Shop[]
+
+  @@map("shop_categories")
+}
+
+model ShopFaq {
+  id        String   @id @default(cuid())
+  shopId    String
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_faqs")
+}
+
+model ShopPolicy {
+  id        String   @id @default(cuid())
+  shopId    String
+  type      String
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_policies")
+}
+
+model ShopReview {
+  id                  String             @id @default(cuid())
+  shopId              String
+  userId              String
+  orderId             String?
+  rating              Int
+  title               String?
+  body                String?
+  imageUrls           String[]
+  isVerifiedPurchase  Boolean            @default(false)
+  status              ReviewStatus       @default(PENDING)
+  helpfulCount        Int                @default(0)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime @updatedAt
+  reviewReports       ReviewReport[]
+  reviewVotes         ReviewVote[]
+  reply               SellerReviewReply?
+  shop                Shop               @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+  @@map("shop_reviews")
+}
+
+model ShopSocialMetrics {
+  id                    String     @id @default(cuid())
+  shopId                String     @unique
+  facebookPageId        String?
+  facebookPageUrl       String?
+  likesCount            BigInt?
+  followersCount        BigInt?
+  commentsCount         BigInt?
+  reviewCountExternal   Int?
+  ratingAverageExternal Float?
+  syncedAt              DateTime?
+  syncStatus            SyncStatus @default(PENDING)
+  syncError             String?
+  shop                  Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_social_metrics")
+}
+
+model ShopThemeSettings {
+  id        String    @id @default(cuid())
+  shopId    String
+  themeType ThemeType
+  settings  Json
+  isActive  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime @updatedAt
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, themeType])
+  @@map("shop_theme_settings")
+}
+
+model ShopVerification {
+  id          String    @id @default(cuid())
+  shopId      String
+  type        String
+  status      String
+  submittedAt DateTime  @default(now())
+  reviewedAt  DateTime?
+  notes       String?
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("shop_verifications")
+}
+
+model Shop {
+  id                      String                  @id @default(cuid())
+  ownerId                 String                  @unique
+  categoryId              String?
+  name                    String
+  slug                    String                  @unique
+  shortDescription        String?
+  fullAbout               String?
+  subcategory             String?
+  logoUrl                 String?
+  coverUrl                String?
+  businessPhone           String?
+  whatsappNumber          String?
+  messengerLink           String?
+  websiteUrl              String?
+  facebookPageUrl         String?
+  facebookPageId          String?
+  facebookUsername        String?
+  address                 String?
+  city                    String?
+  status                  ShopStatus              @default(DRAFT)
+  isOpen                  Boolean                 @default(true)
+  isVerified              Boolean                 @default(false)
+  verificationBadge       String?
+  isFeatured              Boolean                 @default(false)
+  externalShopEnabled     Boolean                 @default(true)
+  internalShopEnabled     Boolean                 @default(false)
+  facebookConnected       Boolean                 @default(false)
+  facebookSyncEnabled     Boolean                 @default(false)
+  activeTheme             ThemeType               @default(MODERN_CLEAN)
+  metaTitle               String?
+  metaDescription         String?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime @updatedAt
+  storefrontEnabled       Boolean                 @default(false)
+  storefrontPublishedAt   DateTime?
+  storefrontSettings      Json?
+  storefrontTheme         String?
+  carts                   Cart[]
+  facebookConnection      FacebookPageConnection?
+  favoriteShops           FavoriteShop[]
+  featuredShops           FeaturedShop[]
+  orders                  Order[]
+  products                Product[]
+  recentlyViewed          RecentlyViewed[]
+  reports                 Report[]
+  businessHours           ShopBusinessHour[]
+  faqs                    ShopFaq[]
+  policies                ShopPolicy[]
+  reviews                 ShopReview[]
+  socialMetrics           ShopSocialMetrics?
+  themeSettings           ShopThemeSettings[]
+  verifications           ShopVerification[]
+  category                ShopCategory?           @relation(fields: [categoryId], references: [id])
+  owner                   User                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("shops")
+}
+
+model RecentlyViewed {
+  id       String   @id @default(cuid())
+  userId   String
+  shopId   String?
+  viewedAt DateTime @default(now())
+  shop     Shop?    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("recently_viewed")
+}
+
+enum OnboardingStatus {
+  PENDING
+  BUYER_COMPLETE
+  SELLER_COMPLETE
+  COMPLETE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  BANK_TRANSFER
+  MOBILE_BANKING
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+  PARTIAL
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+enum Role {
+  GUEST
+  BUYER
+  SELLER
+  ADMIN
+}
+
+enum ShopStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING_REVIEW
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+enum ThemeType {
+  MODERN_CLEAN
+  COLORFUL_SOCIAL
+  MINIMAL_BOUTIQUE
+}
+
+enum TokenStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  UNKNOWN
 }
