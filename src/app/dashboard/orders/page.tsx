@@ -16,7 +16,7 @@ export default async function DashboardOrdersPage() {
     where: { shopId: user.shop.id },
     include: {
       items: true,
-      buyer: { select: { name: true, profile: { select: { phone: true } } } },
+      buyer: { select: { name: true, profiles: { select: { phone: true } } } },
       shippingAddress: true,
     },
     orderBy: { createdAt: "desc" },

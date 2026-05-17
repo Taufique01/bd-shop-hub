@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "../src/lib/prisma";
 
 /**
  * Prisma seed script
@@ -68,7 +68,7 @@ async function main() {
       name: "Rahim Ahmed",
       role: "BUYER",
       onboardingStatus: "BUYER_COMPLETE",
-      profile: {
+      profiles: {
         create: {
           phone: "+8801712345678",
           city: "Dhaka",
@@ -85,7 +85,7 @@ async function main() {
       name: "Salma Begum",
       role: "SELLER",
       onboardingStatus: "SELLER_COMPLETE",
-      profile: {
+      profiles: {
         create: {
           phone: "+8801987654321",
           city: "Dhaka",
@@ -102,7 +102,7 @@ async function main() {
       name: "Karim Tech",
       role: "SELLER",
       onboardingStatus: "SELLER_COMPLETE",
-      profile: {
+      profiles: {
         create: {
           phone: "+8801812345678",
           city: "Dhaka",

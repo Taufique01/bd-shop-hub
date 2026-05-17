@@ -109,22 +109,25 @@ export async function GET(req: NextRequest) {
       prisma.shop.count({ where }),
     ]);
 
-    // Compute average rating
-    const shopsWithStats = (shops as any[]).map((shop) => {
-      const ratings = (shop.reviews || []).map((r: any) => r.rating);
+    // Compute average rating (omit socialMetrics — BigInt is not JSON-serializable)
+    const shopsWithStats = shops.map((shop) => {
+      const ratings = shop.reviews.map((r) => r.rating);
       const avgRating =
         ratings.length > 0
-          ? Math.round((ratings.reduce((aValue: any, bValue: any) => aValue + bValue, 0) / ratings.length) * 10) / 10
+          ? Math.round(
+              (ratings.reduce((sum, r) => sum + r, 0) / ratings.length) * 10,
+            ) / 10
           : null;
 
+      const { reviews, socialMetrics, _count, ...rest } = shop;
+
       return {
-        ...shop,
-        reviews: undefined, // strip raw reviews
+        ...rest,
         avgRating,
-        reviewCount: shop._count?.reviews || 0,
-        productCount: shop._count?.products || 0,
-        followersCount: shop.socialMetrics?.followersCount?.toString() ?? null,
-        likesCount: shop.socialMetrics?.likesCount?.toString() ?? null,
+        reviewCount: _count.reviews,
+        productCount: _count.products,
+        followersCount: socialMetrics?.followersCount?.toString() ?? null,
+        likesCount: socialMetrics?.likesCount?.toString() ?? null,
       };
     });
 

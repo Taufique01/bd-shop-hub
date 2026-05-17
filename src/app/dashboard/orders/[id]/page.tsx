@@ -18,7 +18,7 @@ export default async function DashboardOrderDetailPage({ params }: { params: Pro
     where: { id },
     include: {
       items: true,
-      buyer: { select: { name: true, email: true, profile: { select: { phone: true } } } },
+      buyer: { select: { name: true, email: true, profiles: { select: { phone: true } } } },
       shippingAddress: true,
       statusLogs: { orderBy: { createdAt: "desc" } },
     },

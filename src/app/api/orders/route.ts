@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
           },
           shippingAddress: true,
           shop: { select: { name: true, slug: true, logoUrl: true } },
-          buyer: { select: { name: true, profile: { select: { phone: true } } } },
+          buyer: { select: { name: true, profiles: { select: { phone: true } } } },
           statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
         },
       }),

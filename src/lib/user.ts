@@ -29,14 +29,14 @@ export async function syncUser(params: SyncUserParams) {
       avatarUrl: avatarUrl ?? null,
       role: Role.BUYER,
       onboardingStatus: OnboardingStatus.PENDING,
-      profile: { create: {} },
+      profiles: { create: {} },
     },
     update: {
       email,
       name: name ?? undefined,
       avatarUrl: avatarUrl ?? undefined,
     },
-    include: { profile: true },
+    include: { profiles: true },
   });
 
   return user;
@@ -49,7 +49,7 @@ export async function getUserByClerkId(clerkId: string) {
   return prisma.user.findUnique({
     where: { clerkId },
     include: {
-      profile: true,
+      profiles: true,
       shop: {
         include: {
           facebookConnection: {
@@ -79,7 +79,7 @@ export async function completeBuyerOnboarding(
       name: data.name,
       role: Role.BUYER,
       onboardingStatus: OnboardingStatus.BUYER_COMPLETE,
-      profile: {
+      profiles: {
         update: {
           phone: data.phone,
           city: data.city,
@@ -115,7 +115,7 @@ export async function completeSellerOnboarding(
         name: data.name,
         role: Role.SELLER,
         onboardingStatus: OnboardingStatus.SELLER_COMPLETE,
-        profile: {
+        profiles: {
           update: {
             phone: data.phone,
             city: data.city,
